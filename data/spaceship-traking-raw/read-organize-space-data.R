@@ -1,4 +1,5 @@
-# Read data from the spaceship experiment and experiment
+# Read data from the spaceship experiment and experiment. Data available at
+# https://osf.io/d6tjw/
 
 participants <- seq(1,72,1)
 prefix <- "S_"
@@ -32,18 +33,21 @@ for(i in participants){
   x2 <- 420 * cos(response[-length(response[,1]),]) + 960
   y2 <- 420 * sin(response[-length(response[,1]),]) + 540
   
-  correct <- as.numeric(colSums(sqrt((x1-x2)^2 + (y1 - y2)^2) <= 52))
+  correct <- sqrt((x1-x2)^2 + (y1 - y2)^2) <= 52
+  correct <- rbind(correct, rep(NA,4))
   
   response_time <- raw_data$rt.press - raw_data$rt.disappear
   
   position <- as.vector(position)
   response <- as.vector(response)
-  correct <- as.vector(correct)
+  correct <- as.numeric(correct)
   response_time <- as.vector(response_time)
   
   space[,1:6,i] <- cbind(trials, condition, position, 
                          response, correct, response_time)
 }
 
-colnames(space) <- c("trials", "condition", "position(rad)", "response(rad)", 
-                     "correct", "response_time(sec)")
+colnames(space) <- c("trials", "condition", "position", "response", 
+                     "correct", "response_time")
+
+save(space, file = "data/spaceship-tracking.Rdata")
