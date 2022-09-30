@@ -50,4 +50,10 @@ for(i in participants){
 colnames(space) <- c("trials", "condition", "position", "response", 
                      "correct", "response_time")
 
-save(space, file = "data/spaceship-tracking.Rdata")
+# Select 10 participants at random without replacement for the analysis 
+set.seed(2513019)
+selected <- sample(x = participants, size = 10, replace = FALSE)
+
+space <- space[,,selected]
+
+save(space, file = "data/spaceship-traking-raw/spaceship-tracking.Rdata")
