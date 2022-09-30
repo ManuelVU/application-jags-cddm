@@ -1,5 +1,5 @@
 # We have to transform the values in the response and target values using 
-# eulers equality to map from [0,1] to a vector in the unit circle, then 
+# Euler's equality to map from [0,1] to a vector in the unit circle, then 
 # we get the radians using the atan2 function. Data available 
 # at https://osf.io/6d29q/
 
