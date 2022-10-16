@@ -41,7 +41,7 @@ for(s in selected){
                              response_rad) 
 }
 
-colnames(hue) <- c("id", "rarget_01", "response_01", "response_time", 
+colnames(hue) <- c("id", "target_01", "response_01", "response_time", 
                      "position", "response")
 
 save(hue, file = "data/color-hue-exp/color-hue.Rdata")

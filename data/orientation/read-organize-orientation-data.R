@@ -3,44 +3,111 @@
 # their responses.
 # data available at https://osf.io/q3ytj/?view_only=
 
+#### Reorganize data as data.frame ----
+library(tidyverse)
+
 rm(list = ls())
 
 prefix <- "GRW"
-sub <- c(101, 110, 120, 130, 140, 150, 170, 180, 190, 200, 210)
+sub <- c(100, 101, 110, 120, 130, 140, 150, 170, 180, 190, 200, 210)
 suffix <- ".mat"
 
-# Choose the ID of two participants at random without replacement (set a seed)
-set.seed(53739)
-selected <- sample(sub, replace = FALSE, size = 2)
+id <- c()
+speedCond <- c()
+cueCond <- c()
+jitter <- c()
+resp <- c()
+target <- c()
+cueOrient <- c()
+dev <- c()
+RT <- c()
 
-orientation_exp <- array(NA, dim = c(960,10,length(sub)))
-count_p <- 0
-
+count_par <- 1
 for(i in sub){
-  count_p <- count_p + 1
   raw_data <- R.matlab::readMat(con = paste(c("data/orientation/", 
                                               prefix, 
                                               i,
                                               suffix), collapse = ""))
   
-  jitter <- unlist(raw_data$dataMat[,,]$trial[,,]["jitter",])
-  resp <- unlist(raw_data$dataMat[,,]$trial[,,]["resp",])
-  target <- unlist(raw_data$dataMat[,,]$trial[,,]["target",])
-  dev <- unlist(raw_data$dataMat[,,]$trial[,,]["dev",])
-  RT <- unlist(raw_data$dataMat[,,]$trial[,,]["RT",])
-  speedCond <- unlist(raw_data$dataMat[,,]$trial[,,]["speedCond",])
-  cueCond <- unlist(raw_data$dataMat[,,]$trial[,,]["cueCond",])
-  cueOrient <- unlist(raw_data$dataMat[,,]$trial[,,]["cueOrient",])
-  trialPoints <- unlist(raw_data$dataMat[,,]$trial[,,]["trialPoints",])
+  jitter <- append(jitter, unlist(raw_data$dataMat[,,]$trial[,,]["jitter",]))
   
-  orientation_exp[,1:10,count_p] <- cbind(rep(i, 960), jitter, resp, target,
-                                          dev, RT, speedCond, cueCond, 
-                                          cueOrient,trialPoints)
+  id <- append(id,
+               rep(count_par, 
+                   length(unlist(raw_data$dataMat[,,]$trial[,,]["jitter",]))))
+  
+  resp <- append(resp, unlist(raw_data$dataMat[,,]$trial[,,]["resp",]))
+  
+  target <- append(target, unlist(raw_data$dataMat[,,]$trial[,,]["target",]))
+  
+  dev <- append(dev, unlist(raw_data$dataMat[,,]$trial[,,]["dev",]))
+  
+  RT <- append(RT, unlist(raw_data$dataMat[,,]$trial[,,]["RT",]))
+  
+  speedCond <- append(speedCond, 
+                      unlist(raw_data$dataMat[,,]$trial[,,]["speedCond",]))
+  
+  cueCond <- append(cueCond, unlist(raw_data$dataMat[,,]$trial[,,]["cueCond",]))
+  
+  cueOrient <- append(cueOrient, 
+                      unlist(raw_data$dataMat[,,]$trial[,,]["cueOrient",]))
+  
+  count_par <- count_par + 1
 }
 
+orientation <- data.frame("id" = id, 
+                          "speed_condition" = speedCond,
+                          "cue_condition" = cueCond, 
+                          "difficulty" = jitter, 
+                          "position" = target, 
+                          "cue_position" = cueOrient,
+                          "response" = resp,
+                          "difference" = dev, 
+                          "response_time" = RT)
+
+orientation <- orientation %>% 
+  filter(cue_condition == 1)
+
+orientation <- orientation %>% 
+  mutate(cue_deflections = 
+           case_when(
+             position > cue_position & (position - cue_position) > pi/2 ~ 
+               -((pi - position) + cue_position),
+             position > cue_position & (position - cue_position) < pi/2 & 
+             (position - cue_position) > 0 ~
+               (position - cue_position),
+             cue_position > position & (cue_position - position) > pi/2 ~
+               (pi - cue_position) + position,
+             cue_position > position & (cue_position - position) < pi/2 &
+             (cue_position - position) > 0 ~ 
+               (cue_position - position),
+             cue_position == position ~ 
+               0)) %>% 
+  mutate(cue_deflections = round(cue_deflections * (180/pi), 0))
+
+# Filter response times as in the original paper
+orientation <- orientation %>% 
+  filter(orientation$response_time > 0.15 & orientation$response_time < 2.5)
+
+# write id variable for difficulty and cue deflection conditions
+orientation <- orientation %>% 
+  mutate(difficulty_id = case_when(difficulty == 15 ~ 1, 
+                                   difficulty == 30 ~ 2,
+                                   difficulty == 45 ~ 3)) %>% 
+  mutate(cue_deflections_id = case_when(
+    cue_deflections == -70 ~ 1,
+    cue_deflections == -50 ~ 2,
+    cue_deflections == -20 ~ 3,
+    cue_deflections ==   0 ~ 4,
+    cue_deflections ==  20 ~ 5,
+    cue_deflections ==  50 ~ 6,
+    cue_deflections ==  70 ~ 7)) %>% 
+  mutate(absolute_cue_id = case_when(abs(cue_deflections) == 0  ~ 1,
+                                     abs(cue_deflections) == 20 ~ 2,
+                                     abs(cue_deflections) == 50 ~ 3,
+                                     abs(cue_deflections) == 70 ~ 4))
 
 
-orientation <- orientation_exp[,,c(which(selected[1] == sub),
-                                   which(selected[2] == sub))]
+# Save file in csv format which is not provided on the github.
 
-save(orientation, file = "data/orientation/orientation.Rdata")
+write_csv(x = orientation, file = "data/orientation/orientation.csv")
+
