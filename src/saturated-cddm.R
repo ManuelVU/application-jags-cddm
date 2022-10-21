@@ -21,26 +21,26 @@ jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time)
                   d = orientation$difficulty_id,
                   c = orientation$cue_deflections_id,
                   ac = orientation$absolute_cue_id,
-                  var_inf = 16/pi^2)
+                  var_inf = 2*(pi/6)^2)
 
 jags_model <- write(x = "model{
 # Prior distribution: boundary
   for(ss in 1:n_speed){
     mu_eta[ss]    ~ dnorm(0, 1)
-    tau_eta[ss]   ~ dgamma(1, 1)
-    sigma_eta[ss] = 1/sqrt(tau_eta[ss])
+    sigma_eta[ss] ~ dunif(0, 3)
+    tau_eta[ss]   = 1/sigma_eta[ss]^2
     
     for(ii in 1:n_par){
       eta_tmp[ii, ss] ~ dnorm(mu_eta[ss], tau_eta[ss])
-      eta[ii, ss] = exp(eta_tmp[ii, ss])
+      eta[ii, ss]     = exp(eta_tmp[ii, ss])
     }
   }
 
 # Prior distribution: drift
   for(dd in 1:n_difficulty){
-    mu_delta[dd]  ~ dnorm(0, 1)
-    tau_delta[dd] ~ dgamma(1,1) 
-    sigma_delta[dd] = 1/sqrt(tau_delta[dd])
+    mu_delta[dd]    ~ dnorm(0, 1)
+    sigma_delta[dd] ~ dunif(0,3) 
+    tau_delta[dd]   = 1/sigma_delta[dd]^2
     
     for(ii in 1:n_par){
       delta_tmp[ii, dd] ~ dnorm(mu_delta[dd], tau_delta[dd])
@@ -64,7 +64,7 @@ jags_model <- write(x = "model{
 
   for(cc in 1:n_cues){
     for(ii in 1:n_par){
-      tau_pos[ii, cc] ~ dunif(0, var_inf)
+      var_pos[ii, cc] ~ dunif(0, var_inf)
     }
   }
   
@@ -72,15 +72,15 @@ jags_model <- write(x = "model{
 
   for(aa in 1:n_abs_cues){
     for(ii in 1:n_par){
-      tau_cue[ii,aa] ~ dunif(0, var_inf)
+      var_cue[ii,aa] ~ dunif(0, var_inf)
     }
   }
 
   for(t in 1:n){
 # Prior distribution: angles and mizture component
     z[t]            ~ dbern(omega[i[t], c[t]])
-    theta_tmp2[t,1] ~ dnorm(position[t], tau_pos[i[t], c[t]])
-    theta_tmp2[t,2] ~ dnorm(cue_position[t], tau_cue[i[t], ac[t]])
+    theta_tmp2[t,1] ~ dnorm(position[t], 1/var_pos[i[t], c[t]])
+    theta_tmp2[t,2] ~ dnorm(cue_position[t], 1/var_cue[i[t], ac[t]])
     
     theta_tmp1[t,1] = ifelse(theta_tmp2[t,1]<0, theta_tmp2[t,1]+6.283185, theta_tmp2[t,1])
     theta_tmp1[t,2] = ifelse(theta_tmp2[t,2]<0, theta_tmp2[t,2]+6.283185, theta_tmp2[t,2])
@@ -97,11 +97,11 @@ jags_model <- write(x = "model{
 }", file = "models/saturated-cddm.txt")
 
 jags_parameters <- c("mu_eta", "sigma_eta", "mu_delta", "sigma_delta", 
-                     "omega", "tau_pos", "tau_cue",
+                     "omega", "var_pos", "var_cue",
                      "eta", "delta", "t0")
 
 samples <- jags(data = jags_data, parameters.to.save = jags_parameters, 
                 model.file = "models/saturated-cddm.txt", n.chains = 4, 
-                n.iter = 20000, n.burnin = 15000)
+                n.iter = 40000, n.burnin = 35000)
 
-saveRDS(samples, file = "posterior-saturated-cddm.RDS")
+saveRDS(samples, file = "data/posteriors/posterior-saturated-cddm.RDS")
