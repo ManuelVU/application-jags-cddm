@@ -1,4 +1,4 @@
-samples <- readRDS("data/posteriors/posterior-saturated-cddm.RDS")
+samples <- readRDS("data/posteriors/posterior-test-eta-omega-cddm.RDS")
 
 eta <- samples$BUGSoutput$sims.list$eta
 speed_col <- c("#5a819e", "#f67e7d")

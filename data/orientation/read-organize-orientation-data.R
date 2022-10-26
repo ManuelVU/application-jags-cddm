@@ -110,4 +110,3 @@ orientation <- orientation %>%
 # Save file in csv format which is not provided on the github.
 
 write_csv(x = orientation, file = "data/orientation/orientation.csv")
-

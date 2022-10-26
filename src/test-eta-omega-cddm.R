@@ -19,7 +19,7 @@ jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time)
                   d = orientation$difficulty_id,
                   c = orientation$cue_deflections_id,
                   ac = orientation$absolute_cue_id,
-                  var_inf = 2*(pi/4)^2)
+                  var_inf = 2*(pi/2)^2)
 
 jags_model <- write(x = "model{
 # Prior distribution: boundary

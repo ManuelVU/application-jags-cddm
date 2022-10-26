@@ -1,8 +1,8 @@
-samples <- readRDS("data/posteriors/posterior-saturated-cddm.RDS")
+samples <- readRDS("data/posteriors/posterior-test-eta-omega-cddm.RDS")
 
 delta <- samples$BUGSoutput$sims.list$delta
 
-difficulty_col <- c("#6cc2bd", "#5a819e", "#f67e7d")
+difficulty_col <- c("#5a819e", "#6cc2bd", "#f67e7d")
 
 k <- 0.15
 a <- 0.1
