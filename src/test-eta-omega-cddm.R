@@ -23,7 +23,7 @@ jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time)
 
 jags_model <- write(x = "model{
 # Prior distribution: boundary
-    mu_eta    ~ dnorm(0, 1)
+    mu_eta    ~ dnorm(0, 2)
     sigma_eta ~ dunif(0, 3)
     tau_eta   = 1/sigma_eta^2
     
@@ -39,7 +39,7 @@ jags_model <- write(x = "model{
   tau_delta   = 1/sigma_delta^2
   
   for(dd in 1:n_difficulty){
-    mu_delta[dd] ~ dnorm(0, 1)
+    mu_delta[dd] ~ dnorm(0, 2)
     
     for(ii in 1:n_par){
       delta_tmp[ii, dd] ~ dnorm(mu_delta[dd], tau_delta)
