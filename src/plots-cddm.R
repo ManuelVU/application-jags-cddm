@@ -1,5 +1,8 @@
-samples <- readRDS("data/posteriors/posterior-test-eta-omega-cddm.RDS")
+# Load libraries and data -------------------------------------------------
+library(tidyverse)
 
+read_csv(file = "data/orientation/orientation.csv")
+samples <- readRDS("data/posteriors/posterior-test-eta-omega-cddm.RDS")
 
 # Figure one: tested parameter values -------------------------------------
 
@@ -209,6 +212,36 @@ dev.off()
 
 
 # Figure two: predictive distribution by participant ----------------------
+spacing <- 10
+space <- 180
+centers <- c(space/2, 
+             3 /2 * (space + spacing), 
+             2 * space + (space + spacing)/2)
 
+sd_target <- 180*sqrt(samples$BUGSoutput$sims.list$var_pos/4)/pi
 
-
+for(ii in 1:dim(sd_target)[2]){
+  plot(x = 0, y = 0, xlim = c(0, 3 * space + 2 * spacing), 
+       ylim = c(0,0.04), ann = FALSE, axes = FALSE, type = "n")
+  
+  for(dd in 1:dim(sd_target)[3]){
+    h1 <- hist( 180 / pi * orientation$difference[orientation$id == ii & 
+                                                  orientation$difficulty_id == dd], 
+               breaks = seq(-90, 90, length.out = 16), plot = FALSE)
+    
+    polygon(x = centers[dd] +
+              c(h1$breaks[which(h1$density > 0)][1],
+                rep(c(h1$breaks[which(h1$density > 0)][-1],
+                      h1$breaks[tail(x = which(h1$density > 0), n = 1) + 1]),
+                      each = 2),
+                rev(rep(h1$breaks[which(h1$density > 0)][-1], each = 2)),
+                h1$breaks[which(h1$density > 0)][1]),
+            y = c(rep(h1$density[which(h1$density>0)],
+                        each = 2),
+                  rep(x = 0, times = length(rep(h1$density[which(h1$density>0)],
+                      each = 2)))),
+            border = FALSE, col = difficulty_col[dd])
+  }
+  axis(side = 1, at = c(centers - 90, centers, centers + 90), 
+       labels = c(rep(c("-90", "0", "90"), each = 3)))
+}
