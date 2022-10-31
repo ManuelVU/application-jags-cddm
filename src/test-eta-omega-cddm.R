@@ -48,9 +48,8 @@ jags_model <- write(x = "model{
   }
   
 # Prior distribution: non-decision time
-  lambda ~ dgamma(1,1)
   for(ii in 1:n_par){
-    t0[ii] ~ dexp(lambda)
+    t0[ii] ~ dexp(1)
   }
   
 # Prior distribution: mixture of response angle
@@ -76,21 +75,22 @@ jags_model <- write(x = "model{
 
   for(dd in 1:n_difficulty){
     for(ii in 1:n_par){
-      var_pos[ii, dd] ~ dunif(0, var_inf)
+      var_pos[ii, dd] ~ dunif(0.01, var_inf)
     }
   }
   
 # Prior distribution: variance of percived cue
-
-  for(aa in 1:n_abs_cues){
-    var_cue[aa] ~ dunif(0, var_inf)
+  for(ii in 1:n_par){
+    for(aa in 1:n_abs_cues){
+      var_cue[ii, aa] ~ dunif(0.01, var_inf)
+    }
   }
 
   for(t in 1:n){
 # Prior distribution: angles and mizture component
     z[t]            ~ dbern(omega[i[t], c[t]])
     theta_tmp2[t,1] ~ dnorm(position[t], 1/var_pos[i[t], d[t]])
-    theta_tmp2[t,2] ~ dnorm(cue_position[t], 1/var_cue[ac[t]])
+    theta_tmp2[t,2] ~ dnorm(cue_position[t], 1/var_cue[i[t], ac[t]])
     
     theta_tmp1[t,1] = ifelse(theta_tmp2[t,1]<0, theta_tmp2[t,1]+6.283185, theta_tmp2[t,1])
     theta_tmp1[t,2] = ifelse(theta_tmp2[t,2]<0, theta_tmp2[t,2]+6.283185, theta_tmp2[t,2])
@@ -108,11 +108,11 @@ jags_model <- write(x = "model{
 
 jags_parameters <- c("mu_eta", "sigma_eta", "mu_delta", "sigma_delta", 
                      "omega", "var_pos", "var_cue",
-                     "eta", "delta", "t0", "gamma_eta", "gamma_omega",
-                     "lambda")
+                     "eta", "delta", "t0", "gamma_eta", "gamma_omega")
 
-samples <- jags(data = jags_data, parameters.to.save = jags_parameters, 
-                model.file = "models/test-eta-omega-cddm.txt", n.chains = 4, 
-                n.iter = 40000, n.burnin = 35000)
+samples <- jags.parallel(data = jags_data, parameters.to.save = jags_parameters, 
+                         model.file = "models/test-eta-omega-cddm.txt",
+                         n.chains = 4, n.iter = 60000, n.burnin = 50000,
+                         jags.module = 'cddm')
 
 saveRDS(samples, file = "data/posteriors/posterior-test-eta-omega-cddm.RDS")
