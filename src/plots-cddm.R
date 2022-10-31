@@ -32,6 +32,9 @@ plot(x = 0, y = 0,axes = FALSE, ann = FALSE,
      xlim = c(0 - a, max(pp_pos) + k + a), type = "n",
      ylim = c(0, max(eta)))
 
+legend('bottomright', bty = "n", pch = 15, col = speed_col, 
+       legend = c("accuracy","speed"), cex = 1.3)
+
 count_pp <- 0
 
 for(ii in 1:dim(eta)[2]){
@@ -73,6 +76,11 @@ plot(x = 0, y = 0, ann = FALSE, axes = FALSE, type = "n",
      ylim = c(0, max(delta)),
      xlim = c(0 - a, max(pp_pos) + k + a))
 
+legend('bottomright', bty = "n", pch = 15, col = difficulty_col, 
+       legend = c(expression(paste(15, degree)), 
+                  expression(paste(30, degree)),
+                  expression(paste(45, degree))), cex = 1.3)
+
 count_pp <- 0
 
 for(pp in 1:dim(delta)[2]){
@@ -108,7 +116,8 @@ k <- 0.15
 a <- 0.1
 pp_pos <- rep(seq(1/2 * (1/dim(sd_target)[3]), 1, 1/dim(sd_target)[3]), 
               times = dim(sd_target)[2]) + 
-  rep(seq(from = 0, by = 1.4, length.out = dim(sd_target)[2]), each = dim(sd_target)[3])
+  rep(seq(from = 0, by = 1.4, length.out = dim(sd_target)[2]), 
+      each = dim(sd_target)[3])
 
 par(xaxs = "i")
 plot(x = 0, y = 0, ann = FALSE, axes = FALSE, type = "n", 
@@ -159,8 +168,16 @@ plot(x = 0, y = 0, ann = FALSE, axes = FALSE, type = "n",
      ylim = c(0, max(omega)),
      xlim = c(0 - a, max(pp_pos) + k + a))
 
+legend(x = 9.5, y = 0.325, col = "slategray", pch = c(15,0), 
+       legend = c("negative", "positive"), bty = "n", cex = 1.3)
+
+legend('bottomright', bty = "n", pch = 15, col = difficulty_col, 
+       legend = c(expression(paste(20, degree)), 
+                  expression(paste(50, degree)),
+                  expression(paste(70, degree))), cex = 1.3)
+
 count_pp <- 0
-positions <- c(1,6,2,5,3,4)
+positions <- c(3,4,2,5,1,6)
 
 for(pp in 1:dim(omega)[2]){
   for(dd in 1:dim(omega)[3]){
@@ -182,7 +199,7 @@ for(pp in 1:dim(omega)[2]){
                     pp_pos[count_pp] + k * 
                       rev(rep(h1$density[which(h1$density>0)]/max(h1$density), 
                               each = 2))),
-              border = omega_col[dd], col = "white",lwd = 1.5)      
+              border = omega_col[dd], col = "white",lwd = 1)      
     }
     else{
       polygon(y = c(h1$breaks[which(h1$density > 0)][1],
