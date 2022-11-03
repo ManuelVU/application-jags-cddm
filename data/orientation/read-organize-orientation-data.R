@@ -9,7 +9,8 @@ library(tidyverse)
 rm(list = ls())
 
 prefix <- "GRW"
-sub <- c(101, 110, 130, 140, 150, 170, 180, 200, 210)
+# sub <- c(101, 110, 130, 140, 150, 170, 180, 200, 210)
+sub <- c(101, 110, 140, 170, 200, 210)
 suffix <- ".mat"
 
 id <- c()
@@ -108,5 +109,4 @@ orientation <- orientation %>%
 
 
 # Save file in csv format which is not provided on the github.
-
 write_csv(x = orientation, file = "data/orientation/orientation.csv")

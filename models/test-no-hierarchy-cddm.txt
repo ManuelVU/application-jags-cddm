@@ -1,24 +1,25 @@
 model{
 # Prior distribution: boundary
   for(ii in 1:n_par){
-    mu_eta[ii]    ~ dnorm(0, 1)
-    gamma_eta[ii] ~ dnorm(0,1)T(0,)
+    mu_eta[ii]    ~ dnorm(0, 3)
+    gamma_eta[ii] ~ dnorm(0, 1)T(0,)
     eta[ii, 1]    = exp(mu_eta[ii] + gamma_eta[ii]/2)
     eta[ii, 2]    = exp(mu_eta[ii] - gamma_eta[ii]/2)
   }
 
 # Prior distribution: drift
   for(ii in 1:n_par){
+    mu_drift[ii]   ~ dnorm(0, 3)
+    beta_drift[ii] ~ dnorm(0, 1)T(,0)
+    
     for(dd in 1:n_difficulty){
-      kappa[ii, dd]    ~ dnorm(0,1)
-      drift_tmp[ii,dd] = mu_eta[ii] * kappa[ii, dd]
-      delta[ii,dd]     = exp(drift_tmp[ii,dd])
+      delta[ii, dd] = exp(mu_drift[ii] + dd * beta_drift[ii])
     }
   }
   
 # Prior distribution: non-decision time
   for(ii in 1:n_par){
-    t0[ii] ~ dunif(0, 0.99 * ndt_up[ii])
+    t0[ii] ~ dunif(0.01, 0.99 * ndt_up[ii])
   }
   
 # Prior distribution: mixture of response angle
@@ -44,21 +45,21 @@ model{
 
   for(ii in 1:n_par){
     mu_tau_pos[ii]   ~ dnorm(0,1)
-    beta_tau_pos[ii] ~ dnorm(0,1)
+    beta_tau_pos[ii] ~ dnorm(0,1)T(,0)
     
     for(dd in 1:n_difficulty){
-      tau_pos[ii, dd] = exp(mu_tau_pos[ii] + beta_tau_pos[ii] * (4-dd))
+      tau_pos[ii, dd] = exp(mu_tau_pos[ii] + dd * beta_tau_pos[ii])
       var_pos[ii, dd] = 1/tau_pos[ii,dd]
     }
   }
   
 # Prior distribution: variance of percived cue
-  mu_var_cue  ~ dnorm(0,1)
+  mu_var_cue  ~ dnorm(0,0.1)
   
   for(ii in 1:n_par){
     beta_var_cue[ii] ~ dnorm(0,1)
-    tau_cue[ii]     = exp(mu_var_cue + beta_var_cue[ii])
-    var_cue[ii]     = 1/tau_cue[ii]
+    tau_cue[ii]      = exp(mu_var_cue + beta_var_cue[ii])
+    var_cue[ii]      = 1/tau_cue[ii]
   }
 
   for(t in 1:n){
