@@ -6,6 +6,11 @@ load.module("cddm")
 # Load data file
 orientation <- read_csv(file = "data/orientation/orientation.csv")
 
+min_resp_time <- c()
+for(ii in 1:length(unique(orientation$id))){
+  min_resp_time[ii] <- min(orientation$response_time[orientation$id == ii])
+}
+
 # Pass data to jags
 jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time),
                   position = 2 * orientation$position,
@@ -19,12 +24,12 @@ jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time)
                   d = orientation$difficulty_id,
                   c = orientation$cue_deflections_id,
                   ac = orientation$absolute_cue_id,
-                  var_inf = c(2*(pi/2)^2, 2*(5*pi/180)^2))
+                  ndt_up = min_resp_time)
 
 jags_model <- write(x = "model{
 # Prior distribution: boundary
     mu_eta    ~ dnorm(0, 2)
-    sigma_eta ~ dunif(0, 2)
+    sigma_eta ~ dunif(0, 1)
     tau_eta   = 1/sigma_eta^2
     
   for(ii in 1:n_par){
@@ -35,7 +40,7 @@ jags_model <- write(x = "model{
   }
 
 # Prior distribution: drift
-  sigma_delta ~ dunif(0,2)
+  sigma_delta ~ dunif(0,1)
   tau_delta   = 1/sigma_delta^2
   
   for(dd in 1:n_difficulty){
@@ -49,7 +54,7 @@ jags_model <- write(x = "model{
   
 # Prior distribution: non-decision time
   for(ii in 1:n_par){
-    t0[ii] ~ dexp(1)
+    t0[ii] ~ dunif(0, 0.99 * ndt_up[ii])
   }
   
 # Prior distribution: mixture of response angle
@@ -74,25 +79,31 @@ jags_model <- write(x = "model{
 # Prior distribution: variance percived angle
 
   for(dd in 1:n_difficulty){
+    mu_var_pos[dd] ~ dnorm(0,1)
+    tau_var_pos[dd] ~ dunif(0,4)
+    
     for(ii in 1:n_par){
-      tau_pos[ii, dd] ~ dunif(1/var_inf[1], 1/var_inf[2])
+      tau_pos_tmp[ii, dd] ~ dnorm(mu_var_pos[dd], tau_var_pos[dd])
+      tau_pos[ii, dd] = exp(tau_pos_tmp[ii, dd])
       var_pos[ii, dd] = 1/tau_pos[ii,dd]
     }
   }
   
 # Prior distribution: variance of percived cue
+  mu_var_cue  ~ dnorm(0,1)
+  tau_var_cue ~ dunif(0,4)
+  
   for(ii in 1:n_par){
-    for(aa in 1:n_abs_cues){
-      tau_cue[ii, aa] ~ dunif(1/var_inf[1], 1/var_inf[2])
-      var_cue[ii, aa] = 1/tau_cue[ii,aa]
-    }
+    tau_cue_tmp[ii] ~ dnorm(mu_var_cue, tau_var_cue)
+    tau_cue[ii]     = exp(tau_cue_tmp[ii])
+    var_cue[ii] = 1/tau_cue[ii]
   }
 
   for(t in 1:n){
 # Prior distribution: angles and mizture component
     z[t]            ~ dbern(omega[i[t], c[t]])
     theta_tmp2[t,1] ~ dnorm(position[t], tau_pos[i[t], d[t]])
-    theta_tmp2[t,2] ~ dnorm(cue_position[t], tau_cue[i[t], ac[t]])
+    theta_tmp2[t,2] ~ dnorm(cue_position[t], tau_cue[i[t]])
     
     theta_tmp1[t,1] = ifelse(theta_tmp2[t,1]<0, theta_tmp2[t,1]+6.283185, theta_tmp2[t,1])
     theta_tmp1[t,2] = ifelse(theta_tmp2[t,2]<0, theta_tmp2[t,2]+6.283185, theta_tmp2[t,2])
