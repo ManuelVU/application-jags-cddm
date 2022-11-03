@@ -105,7 +105,8 @@ orientation <- orientation %>%
   mutate(absolute_cue_id = case_when(abs(cue_deflections) == 0  ~ 1,
                                      abs(cue_deflections) == 20 ~ 2,
                                      abs(cue_deflections) == 50 ~ 3,
-                                     abs(cue_deflections) == 70 ~ 4))
+                                     abs(cue_deflections) == 70 ~ 4)) %>% 
+  mutate(deflection = ifelse(test = absolute_cue_id == 1, yes = 1, no = 2))
 
 
 # Save file in csv format which is not provided on the github.

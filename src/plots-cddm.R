@@ -3,7 +3,8 @@ library(tidyverse)
 library(truncnorm)
 
 orientation <- read_csv(file = "data/orientation/orientation.csv")
-samples <- readRDS("data/posteriors/posterior-test-eta-omega-cddm.RDS")
+# samples <- readRDS("data/posteriors/posterior-test-eta-omega-cddm.RDS")
+samples <- readRDS("data/posteriors/posterior-test-no-hierarchy-cddm.RDS") 
 
 # Figure one: tested parameter values -------------------------------------
 
