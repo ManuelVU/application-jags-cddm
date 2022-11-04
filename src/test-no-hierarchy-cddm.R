@@ -18,18 +18,20 @@ jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time)
                   n_par = length(unique(orientation$id)),
                   n_difficulty = length(unique(orientation$difficulty_id)),
                   n_abs_cues = length(unique(orientation$absolute_cue_id)),
+                  n_deflections = length(unique(orientation$deflection)),
                   n = length(orientation$id),
                   i = orientation$id,
                   s = orientation$speed_condition + 1,
                   d = orientation$difficulty_id,
                   c = orientation$cue_deflections_id,
                   ac = orientation$absolute_cue_id,
+                  df = orientation$deflection,
                   ndt_up = min_resp_time)
 
 jags_model <- write(x = "model{
 # Prior distribution: boundary
   for(ii in 1:n_par){
-    mu_eta[ii]    ~ dnorm(0, 3)
+    mu_eta[ii]    ~ dnorm(0, 2)
     gamma_eta[ii] ~ dnorm(0, 1)T(0,)
     eta[ii, 1]    = exp(mu_eta[ii] + gamma_eta[ii]/2)
     eta[ii, 2]    = exp(mu_eta[ii] - gamma_eta[ii]/2)
@@ -37,7 +39,7 @@ jags_model <- write(x = "model{
 
 # Prior distribution: drift
   for(ii in 1:n_par){
-    mu_drift[ii]   ~ dnorm(0, 3)
+    mu_drift[ii]   ~ dnorm(0, 2)
     beta_drift[ii] ~ dnorm(0, 1)T(,0)
     
     for(dd in 1:n_difficulty){
@@ -82,19 +84,21 @@ jags_model <- write(x = "model{
   }
   
 # Prior distribution: variance of percived cue
-  mu_var_cue  ~ dnorm(0,0.1)
+  for(pp in 1:n_deflections){
+    mu_tau_cue[pp]  ~ dnorm(0,0.1)
   
-  for(ii in 1:n_par){
-    beta_var_cue[ii] ~ dnorm(0,1)
-    tau_cue[ii]      = exp(mu_var_cue + beta_var_cue[ii])
-    var_cue[ii]      = 1/tau_cue[ii]
+    for(ii in 1:n_par){
+      beta_tau_cue[ii, pp] ~ dnorm(0,1)
+      tau_cue[ii, pp]      = exp(mu_tau_cue[pp] + beta_tau_cue[ii, pp])
+      var_cue[ii, pp]      = 1/tau_cue[ii, pp]
+    }
   }
 
   for(t in 1:n){
 # Prior distribution: angles and mizture component
     z[t]            ~ dbern(omega[i[t], c[t]])
     theta_tmp2[t,1] ~ dnorm(position[t], tau_pos[i[t], d[t]])
-    theta_tmp2[t,2] ~ dnorm(cue_position[t], tau_cue[i[t]])
+    theta_tmp2[t,2] ~ dnorm(cue_position[t], tau_cue[i[t], df[t]])
     
     theta_tmp1[t,1] = ifelse(theta_tmp2[t,1]<0, theta_tmp2[t,1]+6.283185, theta_tmp2[t,1])
     theta_tmp1[t,2] = ifelse(theta_tmp2[t,2]<0, theta_tmp2[t,2]+6.283185, theta_tmp2[t,2])
@@ -112,7 +116,8 @@ jags_model <- write(x = "model{
 
 jags_parameters <- c("gamma_eta", "eta", "beta_drift", "delta", 
                      "t0", "gamma_omega", "omega",
-                     "beta_tau_pos", "var_pos", "var_cue")
+                     "beta_tau_pos", "var_pos", "var_cue",
+                     "beta_tau_cue")
 
 samples <- jags.parallel(data = jags_data, parameters.to.save = jags_parameters, 
                          model.file = "models/test-no-hierarchy-cddm.txt",
