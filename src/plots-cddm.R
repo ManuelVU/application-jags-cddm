@@ -18,7 +18,9 @@ delta <- samples$BUGSoutput$sims.list$delta
 sd_target <- 180*sqrt(samples$BUGSoutput$sims.list$var_pos/4)/pi
 omega <- 1 - samples$BUGSoutput$sims.list$omega[,,c(1,2,3,5,6,7)]
 
-speed_col <- c("#5a819e", "#f67e7d")
+# speed_col <- c("#7da2e3", "#f9c9c8")
+# speed_col <- c("#7da2e3", "#f9a886")
+speed_col <- c("#758eb7", "#6f5f90")
 difficulty_col <- c("#5a819e", "#6cc2bd", "#f67e7d")
 omega_col <- rep(x = difficulty_col, each = 2)
 
