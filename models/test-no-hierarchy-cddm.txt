@@ -44,8 +44,8 @@ model{
 # Prior distribution: variance percived angle
 
   for(ii in 1:n_par){
-    mu_tau_pos[ii]   ~ dnorm(0,1)
-    beta_tau_pos[ii] ~ dnorm(0,1)T(,0)
+    mu_tau_pos[ii]   ~ dnorm(0,0.1)
+    beta_tau_pos[ii] ~ dnorm(0,0.1)T(,0)
     
     for(dd in 1:n_difficulty){
       tau_pos[ii, dd] = exp(mu_tau_pos[ii] + dd * beta_tau_pos[ii])
