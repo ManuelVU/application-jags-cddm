@@ -298,12 +298,12 @@ floors <- c(0.2, 0.1, 0)
 curve_color <- "#221d1c"
 
 sd_target <- 180*sqrt(samples$BUGSoutput$sims.list$var_pos/4)/pi
-omega <- 1 - samples$BUGSoutput$sims.list$omega[,,c(1,2,3,5,6,7)]
+omega <- 1 - samples$BUGSoutput$sims.list$omega[,,]
 sd_cue <- 180*sqrt(samples$BUGSoutput$sims.list$var_cue/4)/pi
-positions <- rbind(c(0,0),
-                   c(3,4),
-                   c(2,5),
-                   c(1,6))
+positions <- rbind(c(4,4),
+                   c(3,5),
+                   c(2,6),
+                   c(1,7))
 abs_def <- c(0,20,50,70)
 
 pdf(file = "fig/response-angle-participant-dif-cue.pdf")
@@ -320,7 +320,7 @@ for(ii in 1:dim(sd_target)[2]){
   abline(h = floors[1:2], lwd = 1.3)
   
   for(dd in 1:dim(sd_target)[3]){
-    for(aa in 1:dim(sd_cue)[2]){
+    for(aa in 1:4){
       h1 <- hist( 180 / pi * abs(orientation$difference[orientation$id == ii & 
                                                     orientation$difficulty_id == dd &
                                                     orientation$absolute_cue_id == aa]), 
@@ -345,16 +345,16 @@ for(ii in 1:dim(sd_target)[2]){
               (1-mean(omega[,ii,positions[aa,]])) *                 
                 dtruncnorm(x = x, a = centers[aa], b = centers[aa] + 90, 
                            mean = centers[aa] + abs_def[aa], 
-                           sd = mean(x = sd_cue[,aa])), 
+                           sd = mean(x = sd_cue[,ii,2])), 
               from = centers[aa], to = centers[aa] + 90, add = T, 
               col = curve_color, lwd = 1.6, lty = 1)
       }
       else{
-        curve(floors[dd] + 
+        curve(floors[dd] +
                 dtruncnorm(x = x,a = centers[aa], b = centers[aa]+90, 
                            mean = centers[aa], 
                            sd = mean(x = sd_target[,ii,dd])), 
-              from = centers[aa], to = centers[aa] + 90, add = T, 
+              from = centers[aa], to = centers[aa] + 90, add = TRUE,
               col = curve_color, lwd = 1.6, lty = 1)
       }
     }

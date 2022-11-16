@@ -28,17 +28,13 @@ jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time)
 
 jags_model <- write(x = "model{
 # Prior distribution: boundary
-    mu_eta    ~ dnorm(0, 2)
-    sigma_eta ~ dunif(0, 1)
-    tau_eta   = 1/sigma_eta^2
-    
   for(ii in 1:n_par){
-    gamma_eta[ii] ~ dnorm(0,1)T(0,)
-    eta_tmp[ii]   ~ dnorm(mu_eta, tau_eta)
-    eta[ii, 1]    = exp(eta_tmp[ii] + gamma_eta[ii]/2)
-    eta[ii, 2]    = exp(eta_tmp[ii] - gamma_eta[ii]/2)
+    mu_eta[ii]    ~ dnorm(0, 2)
+    gamma_eta[ii] ~ dnorm(0, 1)T(0,)
+    eta[ii, 1]    = exp(mu_eta[ii] + gamma_eta[ii]/2)
+    eta[ii, 2]    = exp(mu_eta[ii] - gamma_eta[ii]/2)
   }
-
+  
 # Prior distribution: drift
   sigma_delta ~ dunif(0,1)
   tau_delta   = 1/sigma_delta^2
@@ -70,40 +66,36 @@ jags_model <- write(x = "model{
     logit(omega[ii, 1]) = mu_omega[ii,1] + gamma_omega[ii,1]/2
     logit(omega[ii, 2]) = mu_omega[ii,2] + gamma_omega[ii,2]/2
     logit(omega[ii, 3]) = mu_omega[ii,3] + gamma_omega[ii,3]/2
-    logit(omega[ii, 4]) = mu_omega[ii,4]
+    omega[ii, 4] = max( 1/(1+exp(mu_omega[ii,4])), 1 - 1/(1+exp(mu_omega[ii,4])))
     logit(omega[ii, 5]) = mu_omega[ii,3] - gamma_omega[ii,3]/2
     logit(omega[ii, 6]) = mu_omega[ii,2] - gamma_omega[ii,2]/2
     logit(omega[ii, 7]) = mu_omega[ii,1] - gamma_omega[ii,1]/2
   }
   
 # Prior distribution: variance percived angle
-
+  tau_var_pos ~ dunif(0,4)
+    
   for(dd in 1:n_difficulty){
     mu_var_pos[dd] ~ dnorm(0,1)
-    tau_var_pos[dd] ~ dunif(0,4)
-    
+
     for(ii in 1:n_par){
-      tau_pos_tmp[ii, dd] ~ dnorm(mu_var_pos[dd], tau_var_pos[dd])
+      tau_pos_tmp[ii, dd] ~ dnorm(mu_var_pos[dd], tau_var_pos)
       tau_pos[ii, dd] = exp(tau_pos_tmp[ii, dd])
       var_pos[ii, dd] = 1/tau_pos[ii,dd]
     }
   }
   
 # Prior distribution: variance of percived cue
-  mu_var_cue  ~ dnorm(0,1)
-  tau_var_cue ~ dunif(0,4)
   
   for(ii in 1:n_par){
-    tau_cue_tmp[ii] ~ dnorm(mu_var_cue, tau_var_cue)
-    tau_cue[ii]     = exp(tau_cue_tmp[ii])
-    var_cue[ii] = 1/tau_cue[ii]
+    var_cue[ii] ~ dunif(0.01,2)
   }
 
   for(t in 1:n){
 # Prior distribution: angles and mizture component
     z[t]            ~ dbern(omega[i[t], c[t]])
     theta_tmp2[t,1] ~ dnorm(position[t], tau_pos[i[t], d[t]])
-    theta_tmp2[t,2] ~ dnorm(cue_position[t], tau_cue[i[t]])
+    theta_tmp2[t,2] ~ dnorm(cue_position[t], 1/var_cue[i[t]])
     
     theta_tmp1[t,1] = ifelse(theta_tmp2[t,1]<0, theta_tmp2[t,1]+6.283185, theta_tmp2[t,1])
     theta_tmp1[t,2] = ifelse(theta_tmp2[t,2]<0, theta_tmp2[t,2]+6.283185, theta_tmp2[t,2])
@@ -125,7 +117,7 @@ jags_parameters <- c("mu_eta", "sigma_eta", "mu_delta", "sigma_delta",
 
 samples <- jags.parallel(data = jags_data, parameters.to.save = jags_parameters, 
                          model.file = "models/test-eta-omega-cddm.txt",
-                         n.chains = 4, n.iter = 40000, n.burnin = 35000,
+                         n.chains = 4, n.iter = 50000, n.burnin = 45000,
                          jags.module = 'cddm')
 
 saveRDS(samples, file = "data/posteriors/posterior-test-eta-omega-cddm.RDS")
