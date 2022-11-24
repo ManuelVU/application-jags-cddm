@@ -38,7 +38,7 @@ for(ii in 1:dim(delta)[2]){
     
 }
 
-#### Approximating bayes factor of a difference in mixing probabilities between 
+#### Approximating Bayes factor of a difference in mixing probabilities between 
 #### the mixing probabilities for positive and negative cue deflections --------
 
 # Posterior samples on the logit scale of the difference between mixing 
@@ -80,10 +80,10 @@ for(ii in 1:dim(delta)[2]){
 
 test_table <- data.frame("participants" = seq(1,6),
                          "bf_diff_eta" = 1/bayes_factor_01_eta,
-                         "post_prob_delta" = posterior_prob_delta,
                          "bf_diff_20deg" = 1/bayes_factor_01_omega[,1],
                          "bf_diff_50deg" = 1/bayes_factor_01_omega[,2],
                          "bf_diff_70deg" = 1/bayes_factor_01_omega[,3],
+                         "post_prob_delta" = posterior_prob_delta,
                          "post_prob_sd" = posterior_prob_sd)
 
 test_table %>% 

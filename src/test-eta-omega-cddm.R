@@ -55,18 +55,18 @@ jags_model <- write(x = "model{
   
 # Prior distribution: mixture of response angle
   for(ii in 1:n_par){
-    for(j in 1:4){
-      mu_omega[ii,j]    ~ dnorm(0,1)
+    for(jj in 1:4){
+      mu_omega[ii,jj]    ~ dnorm(0,1)
     }
     
-    for(k in 1:3){
-      gamma_omega[ii,k] ~ dnorm(0,1)
+    for(kk in 1:3){
+      gamma_omega[ii,kk] ~ dnorm(0,1)
     }
     
     logit(omega[ii, 1]) = mu_omega[ii,1] + gamma_omega[ii,1]/2
     logit(omega[ii, 2]) = mu_omega[ii,2] + gamma_omega[ii,2]/2
     logit(omega[ii, 3]) = mu_omega[ii,3] + gamma_omega[ii,3]/2
-    omega[ii, 4] = max( 1/(1+exp(mu_omega[ii,4])), 1 - 1/(1+exp(mu_omega[ii,4])))
+    omega[ii, 4]        = max(1 - 1/(1+exp(mu_omega[ii,4])), 1/(1+exp(mu_omega[ii,4])))
     logit(omega[ii, 5]) = mu_omega[ii,3] - gamma_omega[ii,3]/2
     logit(omega[ii, 6]) = mu_omega[ii,2] - gamma_omega[ii,2]/2
     logit(omega[ii, 7]) = mu_omega[ii,1] - gamma_omega[ii,1]/2

@@ -15,7 +15,7 @@ par(oma = c(3,3,1,1),
 eta <- samples$BUGSoutput$sims.list$eta
 delta <- samples$BUGSoutput$sims.list$delta
 sd_target <- 180*sqrt(samples$BUGSoutput$sims.list$var_pos/4)/pi
-omega <- 1 - samples$BUGSoutput$sims.list$omega[,,c(1,2,3,5,6,7)]
+omega <- 1 - samples$BUGSoutput$sims.list$omega
 
 # speed_col <- c("#7da2e3", "#f9c9c8")
 # speed_col <- c("#7da2e3", "#f9a886")
@@ -293,7 +293,7 @@ floors <- c(0.2, 0.1, 0)
 curve_color <- "#221d1c"
 
 sd_target <- 180*sqrt(samples$BUGSoutput$sims.list$var_pos/4)/pi
-omega <- 1 - samples$BUGSoutput$sims.list$omega[,,]
+omega <- 1 - samples$BUGSoutput$sims.list$omega
 sd_cue <- 180*sqrt(samples$BUGSoutput$sims.list$var_cue/4)/pi
 positions <- rbind(c(4,4),
                    c(3,5),
@@ -421,6 +421,7 @@ centers <- c(center + 0 * spacing + 0 * dimention,
 sim <- 200
 
 sd_target <- 180*sqrt(samples$BUGSoutput$sims.list$var_pos/4)/pi
+sd_cue <- 180*sqrt(samples$BUGSoutput$sims.list$var_cue/4)/pi
 
 # pdf(file = "fig/response-angle-participant-dif.pdf")
 layout(matrix(seq(1,dim(sd_target)[2]), byrow = TRUE, ncol = 3))
@@ -436,13 +437,16 @@ for(ii in 1:dim(sd_target)[2]){
   
   for(dd in 1:dim(sd_target)[3]){
     h1 <- hist( 180 / pi * orientation$difference[orientation$id == ii & 
-                                                    orientation$difficulty_id == dd], 
+                                                  orientation$difficulty_id == dd &
+                                                  orientation$absolute_cue_id == 1], 
                 breaks = seq(-90, 90, length.out = 16), plot = FALSE)
     for(jj in 1:sim){
       y <- sample(x = seq(1,length(sd_target[,ii,dd])), size = 1)
       
-      curve(mean(omega[y,ii,positions[(dd+1),]]) * 
-              dnorm(x = x, mean = centers[dd], sd =  sd_target[y, ii, dd]), 
+      curve(omega[y,ii,4] * 
+              dnorm(x = x, mean = centers[dd], sd =  sd_target[y, ii, dd]) + 
+            (1-omega[y,ii,4]) * 
+              dnorm(x = x, mean = centers[dd], sd =  sd_cue[y, ii]), 
             from = centers[dd] - 90, to = centers[dd] + 90, add = T, 
             col = paste(c(difficulty_col[dd],"33"),collapse = ""), lwd = 3)  
     }
