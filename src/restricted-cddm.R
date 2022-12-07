@@ -24,34 +24,33 @@ jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time)
 jags_model <- write(x = "model{
 # Prior distribution: boundary
   mu_eta    ~ dnorm(0, 1)
-  sigma_eta ~ dunif(0, 3)
+  sigma_eta ~ dunif(0, 1)
   tau_eta   = 1/sigma_eta^2
     
   for(ii in 1:n_par){
     for(ss in 1:n_speed){
-      eta_tmp1[ii, ss] ~ dnorm(mu_eta, tau_eta)
+      eta_tmp[ii, ss] ~ dlnorm(mu_eta, tau_eta)
     }
    
-    eta_tmp[ii, 1:2] = sort(eta_tmp1[ii, 1:2])
-    eta[ii,1]        = exp(eta_tmp[ii,2])
-    eta[ii,2]        = exp(eta_tmp[ii,1])
+    eta[ii, 1:2] = sort(eta_tmp[ii, 1:2])
   }
 
 # Prior distribution: drift
-  sigma_delta ~ dunif(0,3)
+  sigma_delta ~ dunif(0,1)
   tau_delta   = 1/sigma_delta^2
+  
   for(dd in 1:n_difficulty){
     mu_delta[dd] ~ dnorm(0, 1)
   }
   
   for(ii in 1:n_par){
     for(dd in 1:n_difficulty){
-      delta_tmp1[ii, dd] ~ dnorm(mu_delta[dd], tau_delta)
+      delta_tmp1[ii, dd] ~ dlnorm(mu_delta[dd], tau_delta)
     }
     delta_tmp[ii, 1:3] = sort(delta_tmp1[ii, 1:3])
-    delta[ii, 1]       = exp(delta_tmp[ii, 3])
-    delta[ii, 2]       = exp(delta_tmp[ii, 2])
-    delta[ii, 3]       = exp(delta_tmp[ii, 1])
+    delta[ii, 1]       = delta_tmp[ii, 3]
+    delta[ii, 2]       = delta_tmp[ii, 2]
+    delta[ii, 3]       = delta_tmp[ii, 1]
   }
   
 # Prior distribution: non-decision time
@@ -61,36 +60,43 @@ jags_model <- write(x = "model{
   }
   
 # Prior distribution: mixture of response angle
-  for(aa in 1:n_abs_cues){
-    mu_omega[aa]    ~ dnorm(0,1)
-    
-    for(ii in 1:n_par){
-      beta[ii,aa]          ~ dnorm(0,1)
-      logit(omega[ii, aa]) = mu_omega[aa] + beta[ii,aa]
-    }
+  mu_omega ~ dnorm(0,1)
+  
+  for(ii in 1:n_par){
+    beta[ii]         ~ dnorm(0,1)
+    logit(omega[ii]) = mu_omega + beta[ii]
   }
   
 # Prior distribution: variance percived angle
-
-  for(ii in 1:n_par){
-    for(dd in 1:n_difficulty){
-      var_pos_tmp[ii,dd] ~ dunif(0, var_inf)
-    }
-    
-    var_pos[ii, 1:3] = sort(var_pos_tmp[ii, 1:3])
+  for(dd in 1:n_difficulty){
+    mu_var_postmp[dd] ~ dnorm(0,1)
+  }
+  
+  tau_var_pos     ~ dunif(0,4)
+  mu_var_pos[1:3] <- sort(mu_var_postmp[1:3])
+  
+  for(dd in 1:n_difficulty){
+    tau_pos_tmp[dd] ~ dnorm(mu_var_pos[dd], tau_var_pos)
+    tau_pos[dd]     = exp(tau_pos_tmp[dd])
+    var_pos[dd]     = 1/tau_pos[dd]
   }
   
 # Prior distribution: variance of percived cue
 
+  mu_tau_cue  ~ dnorm(0,1)
+  tau_tau_cue ~ dgamma(0.1, 0.1)
+
   for(aa in 1:n_abs_cues){
-    var_cue[aa] ~ dunif(0, var_inf)
+    tau_cuetmp[aa] ~ dnorm(mu_tau_cue, tau_tau_cue)
+    tau_cue[aa]    <- exp(tau_cuetmp[aa]) + 0.01
+    sd_cue[aa]    <- 1/sqrt(tau_cue[aa])
   }
 
   for(t in 1:n){
 # Prior distribution: angles and mizture component
-    z[t]            ~ dbern(omega[i[t], ac[t]])
-    theta_tmp2[t,1] ~ dnorm(position[t], 1/var_pos[i[t], d[t]])
-    theta_tmp2[t,2] ~ dnorm(cue_position[t], 1/var_cue[ac[t]])
+    z[t]            ~ dbern(omega[i[t]])
+    theta_tmp2[t,1] ~ dnorm(position[t], 1/var_pos[d[t]])
+    theta_tmp2[t,2] ~ dnorm(cue_position[t], tau_cue[ac[t]])
     
     theta_tmp1[t,1] = ifelse(theta_tmp2[t,1]<0, theta_tmp2[t,1]+6.283185, theta_tmp2[t,1])
     theta_tmp1[t,2] = ifelse(theta_tmp2[t,2]<0, theta_tmp2[t,2]+6.283185, theta_tmp2[t,2])
@@ -107,11 +113,12 @@ jags_model <- write(x = "model{
 }", file = "models/restricted-cddm.txt")
 
 jags_parameters <- c("mu_eta", "sigma_eta", "mu_delta", "sigma_delta", 
-                     "mu_omega", "beta", "omega", "var_pos", "var_cue",
+                     "mu_omega", "beta", "omega", "var_pos", "sd_cue",
                      "eta", "delta", "t0","lambda")
 
-samples <- jags(data = jags_data, parameters.to.save = jags_parameters, 
-                model.file = "models/restricted-cddm.txt", n.chains = 4, 
-                n.iter = 4000, n.burnin = 2000)
+samples <- jags.parallel(data = jags_data, parameters.to.save = jags_parameters, 
+                         model.file = "models/restricted-cddm.txt", 
+                         n.chains = 4, n.iter = 50000, n.burnin = 45000,
+                         jags.module = 'cddm')
 
 saveRDS(samples, file = "data/posteriors/restricted-cddm.RDS")
