@@ -1,8 +1,8 @@
 model{
 # Prior distribution: boundary
   mu_eta    ~ dnorm(0, 1)
-  sigma_eta ~ dunif(0, 1)
-  tau_eta   = 1/sigma_eta^2
+  tau_eta   ~ dunif(0, 4)
+  var_eta   = 1/tau_eta
     
   for(ii in 1:n_par){
     for(ss in 1:n_speed){
@@ -53,26 +53,24 @@ model{
   mu_var_pos[1:3] <- sort(mu_var_postmp[1:3])
   
   for(dd in 1:n_difficulty){
-    tau_pos_tmp[dd] ~ dnorm(mu_var_pos[dd], tau_var_pos)
-    tau_pos[dd]     = exp(tau_pos_tmp[dd])
-    var_pos[dd]     = 1/tau_pos[dd]
+    tau_pos[dd] ~ dlnorm(mu_var_pos[dd], tau_var_pos)
+    var_pos[dd] = 1/tau_pos[dd]
   }
   
 # Prior distribution: variance of percived cue
 
   mu_tau_cue  ~ dnorm(0,1)
-  tau_tau_cue ~ dgamma(0.1, 0.1)
+  tau_tau_cue ~ dgamma(2, 1)
 
   for(aa in 1:n_abs_cues){
-    tau_cuetmp[aa] ~ dnorm(mu_tau_cue, tau_tau_cue)
-    tau_cue[aa]    <- exp(tau_cuetmp[aa]) + 0.01
-    sd_cue[aa]    <- 1/sqrt(tau_cue[aa])
+    tau_cue[aa] ~ dlnorm(mu_tau_cue, tau_tau_cue)
+    var_cue[aa]    <- 1/sqrt(tau_cue[aa])
   }
 
   for(t in 1:n){
 # Prior distribution: angles and mizture component
     z[t]            ~ dbern(omega[i[t]])
-    theta_tmp2[t,1] ~ dnorm(position[t], 1/var_pos[d[t]])
+    theta_tmp2[t,1] ~ dnorm(position[t], tau_pos[d[t]])
     theta_tmp2[t,2] ~ dnorm(cue_position[t], tau_cue[ac[t]])
     
     theta_tmp1[t,1] = ifelse(theta_tmp2[t,1]<0, theta_tmp2[t,1]+6.283185, theta_tmp2[t,1])
