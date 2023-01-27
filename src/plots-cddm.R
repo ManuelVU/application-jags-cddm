@@ -15,7 +15,7 @@ par(oma = c(3,3,1,1),
 eta <- samples$BUGSoutput$sims.list$eta
 delta <- samples$BUGSoutput$sims.list$delta
 sd_target <- 180*sqrt(samples$BUGSoutput$sims.list$var_pos/4)/pi
-omega <- 1 - samples$BUGSoutput$sims.list$omega
+omega <- 1 - samples$BUGSoutput$sims.list$omega[,,-4]
 
 # speed_col <- c("#7da2e3", "#f9c9c8")
 # speed_col <- c("#7da2e3", "#f9a886")

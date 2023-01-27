@@ -29,7 +29,7 @@ jags_data <- list(y = cbind(2 * orientation$response, orientation$response_time)
 jags_model <- write(x = "model{
 # Prior distribution: boundary
   for(ii in 1:n_par){
-    mu_eta[ii]    ~ dnorm(0, 2)
+    mu_eta[ii]    ~ dnorm(0, 1)
     gamma_eta[ii] ~ dnorm(0, 1)T(0,)
     eta[ii, 1]    = exp(mu_eta[ii] + gamma_eta[ii]/2)
     eta[ii, 2]    = exp(mu_eta[ii] - gamma_eta[ii]/2)
@@ -40,7 +40,7 @@ jags_model <- write(x = "model{
   tau_delta   = 1/sigma_delta^2
   
   for(dd in 1:n_difficulty){
-    mu_delta[dd] ~ dnorm(0, 2)
+    mu_delta[dd] ~ dnorm(0, 1)
     
     for(ii in 1:n_par){
       delta_tmp[ii, dd] ~ dnorm(mu_delta[dd], tau_delta)
@@ -88,14 +88,14 @@ jags_model <- write(x = "model{
 # Prior distribution: variance of percived cue
   
   for(ii in 1:n_par){
-    var_cue[ii] ~ dunif(0.01,2)
+    beta_var_cue[ii] ~ dunif(0,1)
   }
 
   for(t in 1:n){
 # Prior distribution: angles and mizture component
     z[t]            ~ dbern(omega[i[t], c[t]])
     theta_tmp2[t,1] ~ dnorm(position[t], tau_pos[i[t], d[t]])
-    theta_tmp2[t,2] ~ dnorm(cue_position[t], 1/var_cue[i[t]])
+    theta_tmp2[t,2] ~ dnorm(cue_position[t], beta_var_cue[i[t]] * tau_pos[i[t], d[t]])
     
     theta_tmp1[t,1] = ifelse(theta_tmp2[t,1]<0, theta_tmp2[t,1]+6.283185, theta_tmp2[t,1])
     theta_tmp1[t,2] = ifelse(theta_tmp2[t,2]<0, theta_tmp2[t,2]+6.283185, theta_tmp2[t,2])
@@ -112,7 +112,7 @@ jags_model <- write(x = "model{
 }", file = "models/test-eta-omega-cddm.txt")
 
 jags_parameters <- c("mu_eta", "sigma_eta", "mu_delta", "sigma_delta", 
-                     "omega", "var_pos", "var_cue",
+                     "omega", "var_pos", "beta_var_cue",
                      "eta", "delta", "t0", "gamma_eta", "gamma_omega")
 
 samples <- jags.parallel(data = jags_data, parameters.to.save = jags_parameters, 
@@ -120,4 +120,4 @@ samples <- jags.parallel(data = jags_data, parameters.to.save = jags_parameters,
                          n.chains = 4, n.iter = 50000, n.burnin = 45000,
                          jags.module = 'cddm')
 
-saveRDS(samples, file = "data/posteriors/posterior-test-eta-omega-cddm.RDS")
+saveRDS(samples, file = "data/posteriors/posterior-test-eta-omega-cddm-new.RDS")
