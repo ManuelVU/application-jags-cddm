@@ -60,7 +60,7 @@ model{
 # Prior distribution: variance of percived cue
   
   for(ii in 1:n_par){
-    beta_var_cue[ii] ~ dunif(0,2)
+    beta_var_cue[ii] ~ dunif(0,1)
   }
 
   for(t in 1:n){

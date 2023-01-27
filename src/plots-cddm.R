@@ -34,6 +34,8 @@ plot(x = 0, y = 0,axes = FALSE, ann = FALSE,
      xlim = c(0 - a, max(pp_pos) + k + a), type = "n",
      ylim = c(0, max(eta)))
 
+mtext(text = "A", side = 3, line = - 0.8, at = 0.12, cex = 1, col = "#555555")
+
 legend('bottomright', bty = "n", pch = 15, col = speed_col, 
        legend = c("accuracy","speed"), cex = 1.3)
 
@@ -77,6 +79,8 @@ par(xaxs = "i")
 plot(x = 0, y = 0, ann = FALSE, axes = FALSE, type = "n", 
      ylim = c(0, max(delta)),
      xlim = c(0 - a, max(pp_pos) + k + a))
+
+mtext(text = "B", side = 3, line = - 0.8, at = 0.12, cex = 1, col = "#555555")
 
 legend('bottomright', bty = "n", pch = 15, col = difficulty_col, 
        legend = c(expression(paste(15, degree)), 
@@ -126,6 +130,8 @@ plot(x = 0, y = 0, ann = FALSE, axes = FALSE, type = "n",
      ylim = c(0, max(sd_target)),
      xlim = c(0 - a, max(pp_pos) + k + a))
 
+mtext(text = "C", side = 3, line = - 0.8, at = 0.12, cex = 1, col = "#555555")
+
 count_pp <- 0
 
 for(pp in 1:dim(sd_target)[2]){
@@ -170,6 +176,8 @@ plot(x = 0, y = 0, ann = FALSE, axes = FALSE, type = "n",
      ylim = c(0, max(omega)),
      xlim = c(0 - a, max(pp_pos) + k + a))
 
+mtext(text = "D", side = 3, line = - 0.8, at = 0.12, cex = 1, col = "#555555")
+
 legend(x = 9.5, y = 0.325, col = "slategray", pch = c(15,0), 
        legend = c("negative", "positive"), bty = "n", cex = 1.3)
 
@@ -177,6 +185,9 @@ legend('bottomright', bty = "n", pch = 15, col = difficulty_col,
        legend = c(expression(paste(20, degree)), 
                   expression(paste(50, degree)),
                   expression(paste(70, degree))), cex = 1.3)
+
+legend(x = 6, y = 0.3, bty = "n", pch = c(0, 15), col = "#666666", 
+       legend = c("positive", "negative"), cex = 1.3)
 
 count_pp <- 0
 positions <- c(3,4,2,5,1,6)
