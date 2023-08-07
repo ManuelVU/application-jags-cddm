@@ -3,15 +3,42 @@
 # their responses.
 # data available at https://osf.io/q3ytj/?view_only=
 
-#### Reorganize data as data.frame ----
-library(tidyverse)
-
 rm(list = ls())
 
+#### Download data files if missing ----
+url <- c("https://osf.io/download/6s3ey/",
+         "https://osf.io/download/3rsjd/",
+         "https://osf.io/download/5vh89/",
+         "https://osf.io/download/rf4hp/",
+         "https://osf.io/download/qg43e/",
+         "https://osf.io/download/fv9tw/",
+         "https://osf.io/download/r8kuc/",
+         "https://osf.io/download/ybgv2/",
+         "https://osf.io/download/j936c/",
+         "https://osf.io/download/mrey2/",
+         "https://osf.io/download/gfqu9/",
+         "https://osf.io/download/6z5qs/")
+
 prefix <- "GRW"
-# sub <- c(101, 110, 130, 140, 150, 170, 180, 200, 210)
-sub <- c(101, 110, 140, 170, 200, 210)
+sub <- c(100, 101, 110, 120, 130, 140, 150, 170, 180, 190, 200, 210)
 suffix <- ".mat"
+
+stored_files <- list.files(path = "data/orientation/matlab-files")
+
+for(i in 1:length(url)){
+  file_name <- paste(c(prefix, sub[i], suffix), collapse = "")
+  if(sum(file_name == stored_files) == 0){
+    download.file(url = url[i], 
+                  destfile = paste(c("data/orientation/matlab-files/", 
+                                     file_name), collapse = ""))
+    
+  }
+}
+
+#### Reorganize data of participants used in the example as data.frame ----
+library(tidyverse)
+
+sub <- c(101, 110, 140, 170, 200, 210)
 
 id <- c()
 speedCond <- c()
@@ -24,8 +51,10 @@ dev <- c()
 RT <- c()
 
 count_par <- 1
+
 for(i in sub){
-  raw_data <- R.matlab::readMat(con = paste(c("data/orientation/", 
+  
+  raw_data <- R.matlab::readMat(con = paste(c("data/orientation/matlab-files/", 
                                               prefix, 
                                               i,
                                               suffix), collapse = ""))
