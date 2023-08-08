@@ -120,4 +120,4 @@ samples <- jags.parallel(data = jags_data, parameters.to.save = jags_parameters,
                          n.chains = 4, n.iter = 50000, n.burnin = 45000,
                          jags.module = 'cddm')
 
-saveRDS(samples, file = "data/posteriors/posterior-test-eta-omega-cddm-new.RDS")
+saveRDS(samples, file = "data/posteriors/posterior-test-eta-omega-cddm.RDS")
