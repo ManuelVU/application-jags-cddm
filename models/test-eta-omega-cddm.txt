@@ -76,9 +76,9 @@ model{
     theta[t,2] = ifelse(theta_tmp1[t,2]>6.283185, theta_tmp1[t,2]-6.283185, theta_tmp1[t,2])
     
 # Likelihood function
-    y[t,1:2] ~ dcddm(delta[i[t], d[t]],
-                     eta[i[t], s[t]], 
-                     t0[i[t]],
-                     theta[t, (z[t] + 1)])
+    y[t,1:2] ~ dcddmpolar(delta[i[t], d[t]],
+                          theta[t, (z[t] + 1)],
+                          eta[i[t], s[t]],
+                          t0[i[t]])
   }
 }
