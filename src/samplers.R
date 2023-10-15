@@ -10,15 +10,13 @@
 library(scatterplot3d) 
 
 sample.MCMC.cddm <- function(n, par, max.RT = 10, plot=FALSE, seed=NA){
-      if(!is.na(seed)){   set.seed(1)   }
+      if(!is.na(seed)){   set.seed(seed)   }  # Use seed if available
       ##### Define key variables
       drift    <- par$drift
       theta    <- par$theta
       tzero    <- par$tzero
       boundary <- par$boundary
       base.C  <- c(0, 2*pi)
-      base.RT <- c(tzero, max.RT)   
-      
       ##### Define the highest density value (for plots and rejection criterion)
       test.RT <- seq(tzero, max.RT, length.out=10) # Use 10 values of RT
       test.densities <- NA
@@ -32,6 +30,7 @@ sample.MCMC.cddm <- function(n, par, max.RT = 10, plot=FALSE, seed=NA){
       ##### Optional: Trace the Bivariate density function
       if(plot){ 
         nSupp <- 100   # Support definition
+        base.RT <- c(tzero, max.RT)   
         # Support points
         support.C   <- seq(base.C[1],base.C[2],length.out=nSupp)    # Choice space
         support.RT <- seq(base.RT[1],base.RT[2],length.out=nSupp)   # RT space
@@ -68,6 +67,7 @@ sample.MCMC.cddm <- function(n, par, max.RT = 10, plot=FALSE, seed=NA){
       n.keep <- 0    # Initial number of accepted values
       n.try <- n     # Number of candidates to evaluate
       samples <- rep(NA, 2) 
+      base.RT <- c(0,max.RT)
       while(n.keep < n){
         # Draw candidate RT and Choice values from Uniform
         cand <- matrix(NA, nrow=n.try, ncol=2)
